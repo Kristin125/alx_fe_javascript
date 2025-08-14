@@ -15,16 +15,22 @@
     button, input[type="file"] { padding: 10px 14px; border-radius: 8px; border: 1px solid #ccc; cursor: pointer; }
   </style>
 </head>
-<body>
+ <body>
   <h1>Dynamic Quote Generator</h1>
 
-  <div id="quoteDisplay"></div>
-  <button id="newQuote">Show New Quote</button>
-  <br><br>
+  <select id="categoryFilter" onchange="filterQuotes()">
+    <option value="all">All Categories</option>
+    <!-- Categories will be added dynamically -->
+  </select>
 
-  <!-- Import & Export Controls -->
-  <input type="file" id="importFile" accept=".json">
-  <button id="exportQuotes">Export Quotes as JSON</button>
+  <div id="quoteDisplay"></div>
+
+  <button id="newQuoteBtn">Show New Quote</button>
+
+  <h3>Add New Quote</h3>
+  <input type="text" id="newQuoteText" placeholder="Enter quote" />
+  <input type="text" id="newQuoteCategory" placeholder="Enter category" />
+  <button id="addQuoteBtn">Add Quote</button>
 
   <script src="script.js"></script>
 </body>
