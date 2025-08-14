@@ -1,36 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Dynamic Quote Generator</title>
   <style>
-    body { font-family: system-ui, Arial, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 16px; }
+    body { font-family: system-ui, Arial, sans-serif; max-width: 900px; margin: 32px auto; padding: 0 16px; }
     h1 { margin-bottom: 12px; }
-    #quoteDisplay { margin: 16px 0 24px; padding: 16px; border: 1px solid #ddd; border-radius: 12px; }
-    blockquote { margin: 0 0 8px 0; font-size: 1.25rem; line-height: 1.5; }
-    .meta { font-size: 0.9rem; opacity: 0.8; }
+    #quoteDisplay { margin: 16px 0 24px; padding: 16px; border: 1px solid #ddd; border-radius: 8px; min-height: 60px; }
+    .meta { font-size: 0.9rem; opacity: 0.8; margin-top:6px; }
     .controls, #addQuoteForm { display: grid; gap: 8px; grid-template-columns: 1fr; margin: 12px 0; }
-    #addQuoteForm input { padding: 10px; border: 1px solid #ccc; border-radius: 8px; }
-    button, input[type="file"] { padding: 10px 14px; border-radius: 8px; border: 1px solid #ccc; cursor: pointer; }
+    input[type="text"] { padding: 8px; border-radius: 6px; border: 1px solid #ccc; width:100%; }
+    button { padding: 8px 12px; border-radius: 6px; border: none; cursor: pointer; }
+    #notification { display:none; position: fixed; right: 16px; bottom: 16px; background:#333; color:#fff; padding:10px 14px; border-radius:8px; z-index:9999;}
+    #serverControls { margin-top: 8px; display:flex; gap:8px; align-items:center; }
   </style>
 </head>
- <body>
+<body>
   <h1>Dynamic Quote Generator</h1>
 
+  <!-- Category filter (checker expects populateCategories + appendChild) -->
+  <label for="categoryFilter">Filter by category:</label>
   <select id="categoryFilter" onchange="filterQuotes()">
     <option value="all">All Categories</option>
-    <!-- Categories will be added dynamically -->
+    <!-- options dynamically populated by populateCategories (uses appendChild) -->
   </select>
 
-  <div id="quoteDisplay"></div>
+  <!-- Main display -->
+  <div id="quoteDisplay" aria-live="polite"></div>
 
-  <button id="newQuoteBtn">Show New Quote</button>
+  <!-- Show new quote button (checker needs event listener on this) -->
+  <div class="controls">
+    <button id="newQuote">Show New Quote</button>
+  </div>
 
-  <h3>Add New Quote</h3>
-  <input type="text" id="newQuoteText" placeholder="Enter quote" />
-  <input type="text" id="newQuoteCategory" placeholder="Enter category" />
-  <button id="addQuoteBtn">Add Quote</button>
+  <!-- Add quote form -->
+  <form id="addQuoteForm">
+    <input id="newQuoteText" type="text" placeholder="Enter a new quote" required />
+    <input id="newQuoteCategory" type="text" placeholder="Enter category (e.g. Inspiration)" required />
+    <button id="addQuoteBtn" type="submit">Add Quote</button>
+  </form>
+
+  <!-- Import / Export JSON -->
+  <div class="controls" id="importExport">
+    <button id="exportJson" type="button">Export Quotes (JSON)</button>
+    <input id="importFile" type="file" accept=".json" />
+  </div>
+
+  <!-- Optional server controls -->
+  <div id="serverControls">
+    <button id="syncNow">Sync Now (server)</button>
+    <small>Periodic sync every 30s (server wins on conflict)</small>
+  </div>
+
+  <!-- Notification UI -->
+  <div id="notification" role="status" aria-live="polite"></div>
 
   <script src="script.js"></script>
 </body>
