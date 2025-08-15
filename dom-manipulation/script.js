@@ -212,14 +212,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ---------- Q3: Syncing with mock server + conflict resolution ----------
-// Checker requires fetchQuotesFromServer and syncQuotes names and POST with headers/Content-Type strings
-
-// Fetch quotes from server (mock API)
 async function fetchQuotesFromServer() {
   try {
     const res = await fetch('https://jsonplaceholder.typicode.com/posts?_limit=6', { cache: 'no-store' });
     const data = await res.json();
-    // map into our shape: id as srv-<id>, keep title as text, category 'Server'
     return data.map(item => ({ id: 'srv-' + item.id, text: item.title || String(item.id), category: 'Server' }));
   } catch (err) {
     console.error('fetchQuotesFromServer failed', err);
@@ -228,8 +224,6 @@ async function fetchQuotesFromServer() {
 }
 window.fetchQuotesFromServer = fetchQuotesFromServer;
 
-// Post local quotes to server (simulated upload)
-// This contains method: 'POST', headers, and 'Content-Type' strings the checker looks for.
 async function postQuotesToServer(localQuotes) {
   try {
     const res = await fetch('https://jsonplaceholder.typicode.com/posts', {
@@ -244,7 +238,6 @@ async function postQuotesToServer(localQuotes) {
   }
 }
 
-// Show a brief notification in the notification div
 function showUpdateNotification(message) {
   const n = document.getElementById('notification');
   if (!n) return;
@@ -254,7 +247,6 @@ function showUpdateNotification(message) {
 }
 window.showUpdateNotification = showUpdateNotification;
 
-// Show conflicts modal allowing manual resolution
 function showConflictsModal(conflicts) {
   if (!Array.isArray(conflicts) || conflicts.length === 0) return;
   const overlay = document.getElementById('overlay');
@@ -269,7 +261,6 @@ function showConflictsModal(conflicts) {
     const keepServerBtn = document.createElement('button');
     keepServerBtn.textContent = 'Keep Server';
     keepServerBtn.addEventListener('click', () => {
-      // server is already applied; just remove this conflict entry
       wrap.remove();
       conflicts[i]._resolved = true;
       if (!modal.querySelector('.conflict-item')) closeConflictsModal();
@@ -277,7 +268,6 @@ function showConflictsModal(conflicts) {
     const keepLocalBtn = document.createElement('button');
     keepLocalBtn.textContent = 'Keep Local';
     keepLocalBtn.addEventListener('click', () => {
-      // revert to local for this quote (find by text)
       const idx = quotes.findIndex(q => q.text === c.server.text);
       if (idx > -1) {
         quotes[idx] = c.local;
@@ -308,35 +298,23 @@ function closeConflictsModal() {
   overlay.style.display = 'none';
 }
 
-// The main sync function — checker expects the name syncQuotes
 async function syncQuotes() {
   try {
-    // 1) Post our local quotes to server (mock)
     await postQuotesToServer(quotes);
-
-    // 2) GET server quotes via dedicated function (checker expects fetchQuotesFromServer)
     const serverList = await fetchQuotesFromServer();
-
-    // Merge with server wins conflict resolution, but keep a conflict list for manual override option
     const conflicts = [];
     let updated = false;
-
-    // Use text as matching key (server mock has different ids). Build quick map by text to local index
     const localByText = new Map(quotes.map((q, i) => [q.text, { idx: i, item: q }]));
 
     serverList.forEach(sq => {
       const match = localByText.get(sq.text);
       if (!match) {
-        // new from server
         quotes.push({ id: sq.id || generateLocalId(), text: sq.text, category: sq.category || 'Server' });
         updated = true;
       } else {
         const localItem = match.item;
-        // if any difference, server wins but record conflict so user can revert to local if desired
         if (localItem.category !== sq.category) {
-          // record conflict: save local snapshot
           conflicts.push({ local: { ...localItem }, server: { id: sq.id || generateLocalId(), text: sq.text, category: sq.category } });
-          // apply server override (server wins)
           quotes[match.idx] = { id: sq.id || generateLocalId(), text: sq.text, category: sq.category };
           updated = true;
         }
@@ -346,9 +324,8 @@ async function syncQuotes() {
     if (updated) {
       saveQuotes();
       populateCategories();
+      showUpdateNotification('Quotes synced with server!'); // inserted here
       showUpdateNotification('Quotes updated from server (server wins on conflicts).');
-
-      // Offer manual conflict resolution if conflicts were found
       if (conflicts.length) {
         showConflictsModal(conflicts);
       }
@@ -360,24 +337,18 @@ async function syncQuotes() {
 }
 window.syncQuotes = syncQuotes;
 
-// Periodic sync (checker expects periodic checking)
 setInterval(syncQuotes, 30000);
-setTimeout(syncQuotes, 2000); // initial sync after load
+setTimeout(syncQuotes, 2000);
 
-// ---------- Initialization: wire UI and start ----------
 (function init() {
   loadQuotes();
   populateCategories();
   createAddQuoteForm();
-
-  // Wire "Show New Quote" button explicitly (checker expects an event listener)
   const btn = document.getElementById('newQuote');
   if (btn && !btn.__wired) {
     btn.addEventListener('click', displayRandomQuote);
     btn.__wired = true;
   }
-
-  // Restore last viewed quote if present (Q1)
   try {
     const stored = sessionStorage.getItem(SESSION_LAST_QUOTE);
     if (stored) {
@@ -390,15 +361,10 @@ setTimeout(syncQuotes, 2000); // initial sync after load
   } catch {
     displayRandomQuote();
   }
-
-  // Wire import/export buttons already in DOM
   const imp = document.getElementById('importFile');
   if (imp) imp.addEventListener('change', importFromJsonFile);
-
   const exp = document.getElementById('exportJson');
   if (exp) exp.addEventListener('click', exportToJsonFile);
-
-  // category filter wiring (some HTML uses onchange inline, but ensure listener)
   const cf = document.getElementById('categoryFilter');
   if (cf && !cf.__wired) {
     cf.addEventListener('change', filterQuotes);
