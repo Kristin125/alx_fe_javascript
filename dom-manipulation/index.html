@@ -1,39 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Dynamic Quote Generator</title>
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; max-width: 900px; margin: 32px auto; padding: 0 16px; }
+    h1 { margin-bottom: 12px; }
+    #quoteDisplay { margin: 16px 0 24px; padding: 16px; border: 1px solid #ddd; border-radius: 8px; min-height: 60px; }
+    .meta { font-size: 0.9rem; opacity: 0.8; margin-top: 6px; }
+    .controls, #addQuoteForm { display: grid; gap: 8px; grid-template-columns: 1fr; margin: 12px 0; }
+    input[type="text"] { padding: 8px; border-radius: 6px; border: 1px solid #ccc; width:100%; box-sizing: border-box; }
+    button { padding: 8px 12px; border-radius: 6px; border: none; cursor: pointer; }
+    #notification { display:none; position: fixed; right: 16px; bottom: 16px; background:#333; color:#fff; padding:10px 14px; border-radius:8px; z-index:9999; }
+    #conflictModal { display:none; position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); background: #fff; border:1px solid #ccc; padding: 16px; z-index: 10000; box-shadow: 0 6px 18px rgba(0,0,0,0.2); max-width: 90%; max-height: 70%; overflow: auto; }
+    #conflictModal .conflict-item { border-bottom: 1px solid #eee; padding: 8px 0; }
+    #conflictModal button { margin-right: 8px; }
+    #overlay { display:none; position: fixed; inset:0; background: rgba(0,0,0,0.4); z-index: 9998; }
+  </style>
 </head>
 <body>
   <h1>Dynamic Quote Generator</h1>
 
-  <!-- Quote Display -->
-  <div id="quoteDisplay"></div>
-  <button id="newQuote">Show New Quote</button>
+  <!-- Category filter -->
+  <label for="categoryFilter">Filter by category:</label>
+  <select id="categoryFilter" onchange="filterQuotes()">
+    <option value="all">All Categories</option>
+  </select>
 
-  <!-- Add Quote Form -->
-  <div>
-    <input id="newQuoteText" type="text" placeholder="Enter a new quote" />
-    <input id="newQuoteCategory" type="text" placeholder="Enter quote category" />
-    <button onclick="addQuote()">Add Quote</button>
+  <!-- Main display -->
+  <div id="quoteDisplay" aria-live="polite"></div>
+  <div class="controls">
+    <button id="newQuote">Show New Quote</button>
   </div>
 
-  <!-- Category Filter -->
-  <div>
-    <select id="categoryFilter" onchange="filterQuotes()">
-      <option value="all">All Categories</option>
-    </select>
-  </div>
+  <!-- Add quote form (exists in HTML; createAddQuoteForm will wire it up) -->
+  <form id="addQuoteForm">
+    <input id="newQuoteText" type="text" placeholder="Enter a new quote" required />
+    <input id="newQuoteCategory" type="text" placeholder="Enter quote category" required />
+    <button id="addQuoteBtn" type="submit">Add Quote</button>
+  </form>
 
   <!-- Import / Export -->
-  <div>
-    <button onclick="exportToJsonFile()">Export Quotes</button>
-    <input type="file" id="importFile" accept=".json" onchange="importFromJsonFile(event)" />
+  <div class="controls" id="importExport">
+    <button id="exportJson" type="button">Export Quotes (JSON)</button>
+    <input id="importFile" type="file" accept=".json" />
   </div>
 
-  <!-- Notifications -->
-  <div id="notification" style="color:red; font-weight:bold;"></div>
+  <!-- Notification and conflict modal placeholders -->
+  <div id="notification" role="status" aria-live="polite"></div>
+  <div id="overlay"></div>
+  <div id="conflictModal" aria-hidden="true"></div>
 
   <script src="script.js"></script>
 </body>
